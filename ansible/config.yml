@@ -6,5 +6,6 @@
     jenkins_admin_username: admin
     jenkins_admin_password: '{{ admin_password }}'
   roles:
+    - aws-cfn-bootstrap
     - git
     - geerlingguy.jenkins

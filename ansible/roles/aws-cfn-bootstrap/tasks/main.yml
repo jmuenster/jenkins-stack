@@ -1,0 +1,20 @@
+---
+  - name: install the pip package
+    yum: 
+      name=python-pip
+      state=present
+
+  - name: install the python-daemon package
+    yum: 
+      name=python-daemon
+      state=present
+
+  - name: install the pystache package
+    yum: 
+      name=pystache
+      state=present
+
+  - name: (easy) install the cfn help scripts
+    command: /bin/easy_install --script-dir /opt/aws/bin https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz 
+
+

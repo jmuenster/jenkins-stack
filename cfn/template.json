@@ -1,11 +1,14 @@
 {
 
   "AWSTemplateFormatVersion" : "2010-09-09",
-  
+
   "Description" : "Builds a jenkins ci stack",
 
   "Parameters" : {
 
+    "CertId" : {
+      "Type" : "String"
+    },
     "ImageId" : {
       "Type" : "String"
     },
@@ -78,16 +81,16 @@
           "Interval" : "20",
           "Timeout" : "10"
         },
-        "Listeners" : [ 
+        "Listeners" : [
           { "LoadBalancerPort" : "22", "InstancePort" : "22", "Protocol" : "TCP" },
-          { "LoadBalancerPort" : "443", "InstancePort" : "8080", "Protocol" : "TCP" }
+          { "LoadBalancerPort" : "443", "InstancePort" : "8080", "Protocol" : "HTTPS", "SSLCertificateId" : { "Ref" : "CertId" } }
         ],
         "Scheme" : "internet-facing",
         "SecurityGroups" : [ { "Ref" : "ElbSg" }, { "Ref" : "Ec2Sg" } ],
         "Subnets" : [ { "Ref" : "SubnetId" } ]
       }
     },
-      
+
     "LC" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties" : {
@@ -125,7 +128,7 @@
         "MaxSize" : "1",
         "VPCZoneIdentifier" : [ { "Ref" : "SubnetId" } ]
       }
-    }   
+    }
 
   }
 
