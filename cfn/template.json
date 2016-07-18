@@ -1,0 +1,131 @@
+{
+
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  
+  "Description" : "Builds a jenkins ci stack",
+
+  "Parameters" : {
+
+    "ImageId" : {
+      "Type" : "String"
+    },
+    "InstanceType" : {
+      "Type" : "String"
+    },
+    "KeyName" : {
+      "Type" : "String"
+    },
+    "SubnetId" : {
+      "Type" : "String"
+    },
+    "VpcId" : {
+      "Type" : "String"
+    }
+
+  },
+
+  "Resources" : {
+
+    "Ec2Sg" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "ec2-sg",
+        "VpcId" : { "Ref" : "VpcId" }
+      }
+    },
+
+    "Ec2SgIngress" : {
+      "Type" : "AWS::EC2::SecurityGroupIngress",
+      "Properties" : {
+        "GroupId" : { "Ref" : "Ec2Sg" },
+        "IpProtocol" : "tcp",
+        "FromPort" : "0",
+        "ToPort" : "65535",
+        "SourceSecurityGroupId" : { "Ref" : "Ec2Sg" }
+      }
+    },
+
+    "ElbSg" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "elb-sg",
+        "SecurityGroupIngress" : [
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "22",
+            "ToPort" : "22",
+            "CidrIp" : "0.0.0.0/0"
+          },
+          {
+            "IpProtocol" : "tcp",
+            "FromPort" : "443",
+            "ToPort" : "443",
+            "CidrIp" : "0.0.0.0/0"
+          }
+        ],
+        "VpcId" : { "Ref" : "VpcId" }
+      }
+    },
+
+    "Elb" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "ConnectionSettings" : { "IdleTimeout" : "3600" },
+        "HealthCheck" : {
+          "Target" : "TCP:22",
+          "HealthyThreshold" : "2",
+          "UnhealthyThreshold" : "10",
+          "Interval" : "20",
+          "Timeout" : "10"
+        },
+        "Listeners" : [ 
+          { "LoadBalancerPort" : "22", "InstancePort" : "22", "Protocol" : "TCP" },
+          { "LoadBalancerPort" : "443", "InstancePort" : "8080", "Protocol" : "TCP" }
+        ],
+        "Scheme" : "internet-facing",
+        "SecurityGroups" : [ { "Ref" : "ElbSg" }, { "Ref" : "Ec2Sg" } ],
+        "Subnets" : [ { "Ref" : "SubnetId" } ]
+      }
+    },
+      
+    "LC" : {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Properties" : {
+        "BlockDeviceMappings" : [ { "DeviceName" : "/dev/sda1", "Ebs" : { "VolumeSize" : "40" } } ],
+        "ImageId" : { "Ref" : "ImageId" },
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "SecurityGroups" : [ { "Ref" : "Ec2Sg" } ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [ "\n", [
+              "#!/bin/bash",
+              "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
+              "yum install -y ansible git pwgen",
+              "ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa",
+              "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys",
+              "touch /root/.admin_pass && chmod 400 /root/.admin_pass && pwgen 12 1 > /root/.admin_pass",
+              "git clone https://github.com/jmuenster/jenkins-stack.git && cd jenkins-stack/ansible",
+              "ansible-galaxy install geerlingguy.jenkins -p ./roles/",
+              "ansible-playbook -c local config.yml --extra-vars 'admin_password=$( cat /root/.admin_pass )'""
+            ] ]
+          }
+        }
+      }
+    },
+
+    "Asg" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "Properties" : {
+        "DesiredCapacity" : "1",
+        "LaunchConfigurationName" : { "Ref" : "LC" },
+        "LoadBalancerNames" : [ { "Ref" : "Elb" } ],
+        "MinSize" : "1",
+        "MaxSize" : "1",
+        "VPCZoneIdentifier" : [ { "Ref" : "SubnetId" } ]
+      }
+    }   
+
+  }
+
+}

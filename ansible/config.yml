@@ -1,0 +1,10 @@
+---
+- name: Configure CI server
+  hosts: localhost
+  vars:
+    jenkins_plugins: [ job-dsl ]
+    jenkins_admin_username: admin
+    jenkins_admin_password: '{{ admin_password }}'
+  roles:
+    - git
+    - geerlingguy.jenkins
