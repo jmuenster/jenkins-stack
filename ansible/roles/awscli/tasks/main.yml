@@ -5,6 +5,8 @@
       state=present
 
   - name: install the aws cli
-    - pip: name=awscli
+    pip: 
+      name=awscli
+      state=present
 
 
