@@ -129,7 +129,7 @@
         "MaxSize" : "1",
         "VPCZoneIdentifier" : [ { "Ref" : "SubnetId" } ]
       },
-      "CreationPolicy" : { "ResourceSignal" : { "Count" : "1" } }
+      "CreationPolicy" : { "ResourceSignal" : { "Count" : "1" , "Timeout" : "PT10M" } }
     }
 
   }
