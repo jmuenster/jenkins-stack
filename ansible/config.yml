@@ -7,4 +7,5 @@
     jenkins_admin_password: '{{ admin_password }}'
   roles:
     - aws-cfn-bootstrap
+    - awscli
     - geerlingguy.jenkins

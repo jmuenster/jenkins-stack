@@ -1,0 +1,10 @@
+---
+  - name: install the pip package
+    yum: 
+      name=python-pip
+      state=present
+
+  - name: install the aws cli
+    - pip: name=awscli
+
+
