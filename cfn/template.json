@@ -12,6 +12,9 @@
     "ImageId" : {
       "Type" : "String"
     },
+    "InstanceProfile" : {
+      "Type" : "String"
+    },
     "InstanceType" : {
       "Type" : "String"
     },
@@ -95,6 +98,7 @@
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties" : {
         "BlockDeviceMappings" : [ { "DeviceName" : "/dev/sda1", "Ebs" : { "VolumeSize" : "40" } } ],
+        "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
         "ImageId" : { "Ref" : "ImageId" },
         "InstanceType" : { "Ref" : "InstanceType" },
         "KeyName" : { "Ref" : "KeyName" },
@@ -104,7 +108,8 @@
             "Fn::Join": [ "", [
               "#!/bin/bash \n",
               "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \n",
-              "yum install -y ansible git pwgen \n",
+              "yum install -y ansible git pwgen zip \n",
+              "pip install awscli \n",
               "ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa \n",
               "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys \n",
               "touch /root/.admin_pass && chmod 400 /root/.admin_pass && pwgen 12 1 > /root/.admin_pass \n",

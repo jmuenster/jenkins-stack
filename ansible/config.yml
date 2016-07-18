@@ -2,7 +2,7 @@
 - name: Configure jenkins ci
   hosts: localhost
   vars:
-    jenkins_plugins: [ job-dsl ]
+    jenkins_plugins: [ job-dsl git ]
     jenkins_admin_username: admin
     jenkins_admin_password: '{{ admin_password }}'
   roles:
