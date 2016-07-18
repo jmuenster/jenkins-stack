@@ -105,9 +105,10 @@
               "ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa",
               "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys",
               "touch /root/.admin_pass && chmod 400 /root/.admin_pass && pwgen 12 1 > /root/.admin_pass",
-              "git clone https://github.com/jmuenster/jenkins-stack.git && cd jenkins-stack/ansible",
+              "git clone https://github.com/jmuenster/jenkins-stack.git",
+              "cd jenkins-stack/ansible",
               "ansible-galaxy install geerlingguy.jenkins -p ./roles/",
-              "ansible-playbook -c local config.yml --extra-vars 'admin_password=$( cat /root/.admin_pass )'""
+              "ansible-playbook -c local config.yml --extra-vars \"admin_password=$( cat /root/.admin_pass )\""
             ] ]
           }
         }
