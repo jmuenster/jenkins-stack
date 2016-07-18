@@ -101,17 +101,18 @@
         "SecurityGroups" : [ { "Ref" : "Ec2Sg" } ],
         "UserData": {
           "Fn::Base64": {
-            "Fn::Join": [ "\n", [
-              "#!/bin/bash",
-              "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
-              "yum install -y ansible git pwgen",
-              "ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa",
-              "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys",
-              "touch /root/.admin_pass && chmod 400 /root/.admin_pass && pwgen 12 1 > /root/.admin_pass",
-              "git clone https://github.com/jmuenster/jenkins-stack.git",
-              "cd jenkins-stack/ansible",
-              "ansible-galaxy install geerlingguy.jenkins -p ./roles/",
-              "ansible-playbook -c local config.yml --extra-vars \"admin_password=$( cat /root/.admin_pass )\""
+            "Fn::Join": [ "", [
+              "#!/bin/bash \n",
+              "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \n",
+              "yum install -y ansible git pwgen \n",
+              "ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa \n",
+              "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys \n",
+              "touch /root/.admin_pass && chmod 400 /root/.admin_pass && pwgen 12 1 > /root/.admin_pass \n",
+              "git clone https://github.com/jmuenster/jenkins-stack.git \n",
+              "cd jenkins-stack/ansible \n",
+              "ansible-galaxy install geerlingguy.jenkins -p ./roles/ \n",
+              "ansible-playbook -c local config.yml --extra-vars \"admin_password=$( cat /root/.admin_pass )\" \n",
+              "/opt/aws/bin/cfn-signal --stack ", { "Ref": "AWS::StackName" }, " --resource Asg --region ", { "Ref": "AWS::Region" }, " -s true \n"
             ] ]
           }
         }
@@ -127,7 +128,8 @@
         "MinSize" : "1",
         "MaxSize" : "1",
         "VPCZoneIdentifier" : [ { "Ref" : "SubnetId" } ]
-      }
+      },
+      "CreationPolicy" : { "ResourceSignal" : { "Count" : "1" } }
     }
 
   }
