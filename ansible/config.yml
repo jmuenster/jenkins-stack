@@ -1,5 +1,5 @@
 ---
-- name: Configure CI server
+- name: Configure jenkins ci
   hosts: localhost
   vars:
     jenkins_plugins: [ job-dsl ]
@@ -7,5 +7,4 @@
     jenkins_admin_password: '{{ admin_password }}'
   roles:
     - aws-cfn-bootstrap
-    - git
     - geerlingguy.jenkins
