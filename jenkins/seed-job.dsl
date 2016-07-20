@@ -1,4 +1,4 @@
-job('generated-pipeline-test-job') {
+job( 'generated-pipeline-test-job' ) {
   properties {
     buildDiscarder {
       strategy {
@@ -12,7 +12,7 @@ job('generated-pipeline-test-job') {
     }
   }
   scm {
-    git( '${repo_url}', '${branch}' )
+    git( "${repo_url}", "${branch}" )
   }
   triggers {
     scm( 'H/2 * * * *' )
@@ -21,12 +21,12 @@ job('generated-pipeline-test-job') {
     preBuildCleanup()
   }
   steps {
-    shell( '/opt/jenkins-stack/bin/update_stack.sh \\\n\
-      ${WORKSPACE}/cfn/template.json \\\n\
+    shell( "/opt/jenkins-stack/bin/update_stack.sh \\\n\
+      \${WORKSPACE}/cfn/template.json \\\n\
       ${region} \\\n\
-      ${WORKSPACE}/tmp/${package_name}-pkg.zip \\\n\
+      \${WORKSPACE}/tmp/${package_name}-pkg.zip \\\n\
       ${package_name}/${package_name}-pkg.zip \\\n\
       ${s3_bucket} \\\n\
-      ${stack_name}' )
+      ${stack_name}" )
   }
 }

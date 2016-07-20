@@ -9,13 +9,7 @@
     "DomainName": {
       "Type": "String"
     },
-    "ExecutionRole": {
-      "Type": "String"
-    },
     "ImageId" : {
-      "Type" : "String"
-    },
-    "InstanceProfile" : {
       "Type" : "String"
     },
     "InstanceType" : {
@@ -34,6 +28,41 @@
   },
 
   "Resources" : {
+
+    "IamRole" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [ {
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "ec2.amazonaws.com" ] },
+            "Action" : [ "sts:AssumeRole" ]
+          } ]
+        },
+        "Path" : "/",
+        "Policies" : [ 
+          {
+            "PolicyName" : { "Fn::Join" : [ "", [ "jenkins-", { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" }, "policy" ] ] },
+            "PolicyDocument" : { 
+              "Version" : "2012-10-17", 
+              "Statement" : [ 
+                { "Effect" : "Allow", "Action" : "acm:*", "Resource" : "*" },
+                { "Effect" : "Allow", "Action" : "logs:*", "Resource" : "*" } 
+              ] 
+            }
+          } 
+        ]
+      }
+    },
+
+    "InstanceProfile" : {
+      "Type" : "AWS::IAM::InstanceProfile",
+      "Properties" : {
+        "Path" : "/",
+        "Roles" : [ { "Ref" : "IamRole" } ]
+      }
+    },
 
     "Ec2Sg" : {
       "Type" : "AWS::EC2::SecurityGroup",
@@ -122,7 +151,7 @@
       "Handler": "index.handler",
       "Runtime": "python2.7",
       "Timeout": "300",
-      "Role": { "Ref" : "ExecutionRole" }
+      "Role": { "Fn::GetAtt" : [ "IamRole", "Arn" ] }
       }
     },
 
