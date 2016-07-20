@@ -29,7 +29,34 @@
 
   "Resources" : {
 
-    "IamRole" : {
+    "LambdaRole" : {
+      "Type" : "AWS::IAM::Role",
+      "Properties" : {
+        "AssumeRolePolicyDocument" : {
+          "Version" : "2012-10-17",
+          "Statement" : [ {
+            "Effect" : "Allow",
+            "Principal" : { "Service" : [ "lambda.amazonaws.com" ] },
+            "Action" : [ "sts:AssumeRole" ]
+          } ]
+        },
+        "Path" : "/",
+        "Policies" : [
+          {
+            "PolicyName" : { "Fn::Join" : [ "", [ "jenkins-", { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" }, "policy" ] ] },
+            "PolicyDocument" : {
+              "Version" : "2012-10-17",
+              "Statement" : [
+                { "Effect" : "Allow", "Action" : "acm:*", "Resource" : "*" },
+                { "Effect" : "Allow", "Action" : "logs:*", "Resource" : "*" }
+              ]
+            }
+          }
+        ]
+      }
+    },
+
+    "AsgRole" : {
       "Type" : "AWS::IAM::Role",
       "Properties" : {
         "AssumeRolePolicyDocument" : {
@@ -46,21 +73,23 @@
             "PolicyName" : { "Fn::Join" : [ "", [ "jenkins-", { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" }, "policy" ] ] },
             "PolicyDocument" : { 
               "Version" : "2012-10-17", 
-              "Statement" : [ 
-                { "Effect" : "Allow", "Action" : "acm:*", "Resource" : "*" },
-                { "Effect" : "Allow", "Action" : "logs:*", "Resource" : "*" } 
-              ] 
+              "Statement": [
+                { "Effect": "Allow", "Action": "cloudformation:*", "Resource": "*" },
+                { "Effect": "Allow", "Action": "iam:*", "Resource": "*" },
+                { "Effect": "Allow", "Action": "lambda:*", "Resource": "*" },
+                { "Effect": "Allow", "Action": "s3:*", "Resource": "*" }
+              ]
             }
           } 
         ]
       }
     },
 
-    "InstanceProfile" : {
+    "IamInstanceProfile" : {
       "Type" : "AWS::IAM::InstanceProfile",
       "Properties" : {
         "Path" : "/",
-        "Roles" : [ { "Ref" : "IamRole" } ]
+        "Roles" : [ { "Ref" : "AsgRole" } ]
       }
     },
 
@@ -151,7 +180,7 @@
       "Handler": "index.handler",
       "Runtime": "python2.7",
       "Timeout": "300",
-      "Role": { "Fn::GetAtt" : [ "IamRole", "Arn" ] }
+      "Role": { "Fn::GetAtt" : [ "LambdaRole", "Arn" ] }
       }
     },
 
@@ -202,7 +231,7 @@
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties" : {
         "BlockDeviceMappings" : [ { "DeviceName" : "/dev/sda1", "Ebs" : { "VolumeSize" : "40" } } ],
-        "IamInstanceProfile" : { "Ref" : "InstanceProfile" },
+        "IamInstanceProfile" : { "Ref" : "IamInstanceProfile" },
         "ImageId" : { "Ref" : "ImageId" },
         "InstanceType" : { "Ref" : "InstanceType" },
         "KeyName" : { "Ref" : "KeyName" },
