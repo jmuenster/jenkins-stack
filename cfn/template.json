@@ -43,7 +43,7 @@
         "Path" : "/",
         "Policies" : [
           {
-            "PolicyName" : { "Fn::Join" : [ "", [ "jenkins-", { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" }, "policy" ] ] },
+            "PolicyName" : { "Fn::Join" : [ "", [ { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" }, "policy" ] ] },
             "PolicyDocument" : {
               "Version" : "2012-10-17",
               "Statement" : [
@@ -70,7 +70,7 @@
         "Path" : "/",
         "Policies" : [ 
           {
-            "PolicyName" : { "Fn::Join" : [ "", [ "jenkins-", { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" }, "policy" ] ] },
+            "PolicyName" : { "Fn::Join" : [ "", [ { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" }, "policy" ] ] },
             "PolicyDocument" : { 
               "Version" : "2012-10-17", 
               "Statement": [
@@ -96,7 +96,7 @@
     "Ec2Sg" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "GroupDescription" : { "Fn::Join" : [ "", [ "jenkins-", { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" }, "ec2-sg" ] ] },
+        "GroupDescription" : { "Fn::Join" : [ "", [ { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" }, "ec2-sg" ] ] },
         "VpcId" : { "Ref" : "VpcId" }
       }
     },
@@ -115,7 +115,7 @@
     "ElbSg" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "GroupDescription" : { "Fn::Join" : [ "", [ "jenkins-", { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" }, "elb-sg" ] ] },
+        "GroupDescription" : { "Fn::Join" : [ "", [ { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" }, "elb-sg" ] ] },
         "SecurityGroupIngress" : [
           {
             "IpProtocol" : "tcp",
@@ -187,7 +187,7 @@
     "Cert": {
       "Type": "Custom::Cert",
       "Properties": {
-        "DomainName": { "Fn::Join" : [ "", [ "jenkins-", { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" } ] ] },
+        "DomainName": { "Fn::Join" : [ "", [ { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" } ] ] },
         "ServiceToken": { "Fn::GetAtt" : [ "CreateCertFunction", "Arn" ] }
       }
     },
@@ -213,17 +213,17 @@
       }
     },
 
-    "Cname" : {
+    "ARecord" : {
       "Type" : "AWS::Route53::RecordSet",
       "Properties" : {
         "HostedZoneName" : { "Fn::Join" : [ "", [ { "Ref" : "DomainName" }, "." ] ] },
-        "Comment" : "cname",
-        "Name" : { "Fn::Join" : [ "", [ "jenkins-", { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" }, "." ] ] },
-        "Type" : "CNAME",
-        "TTL" : "60",
-        "SetIdentifier" :  { "Fn::Join" : [ "", [ "jenkins-", { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" }, "elb-cname" ] ] },
-        "Weight" : "4",
-        "ResourceRecords" : [ { "Fn::GetAtt" : [ "Elb", "DNSName" ] } ]
+        "Comment" : "a record",
+        "Name" : { "Fn::Join" : [ "", [ { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" }, "." ] ] },
+        "Type" : "A",
+        "AliasTarget" : {
+          "HostedZoneId" : { "Fn::GetAtt" : ["Elb", "CanonicalHostedZoneNameID"] },
+          "DNSName" : { "Fn::GetAtt" : ["Elb","DNSName"] }
+        }
       }
     },
 
@@ -276,12 +276,12 @@
   "Outputs" : {
 
     "Ssh" : {
-      "Description" : "Url",
-      "Value" : { "Fn::Join" : [ "", [ "ssh -i ~/.ssh/", { "Ref" : "KeyName" }, ".pem ec2-user@jenkins-", { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" } ] ] }
+      "Description" : "ssh",
+      "Value" : { "Fn::Join" : [ "", [ "ssh -i ~/.ssh/", { "Ref" : "KeyName" }, ".pem ec2-user@", { "Ref" : "ARecord" } ] ] }
     },
     "Url" : {
-      "Description" : "Url",
-      "Value" : { "Fn::Join" : [ "", [ "https://jenkins-", { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" } ] ] }
+      "Description" : "url",
+      "Value" : { "Fn::Join" : [ "", [ "https://", { "Ref" : "ARecord" } ] ] }
     }
 
   }
