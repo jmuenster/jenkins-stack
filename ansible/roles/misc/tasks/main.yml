@@ -1,0 +1,14 @@
+---
+  - name: install the 'Development tools' package group
+    yum: name="@Development tools" state=present
+
+  - name: install the python-devel package
+    yum:
+      name=python-devel
+      state=present
+
+  - name: install the python34-devel package
+    yum:
+      name=python34-devel
+      state=present
+
