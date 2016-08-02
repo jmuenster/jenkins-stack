@@ -10,20 +10,45 @@
       "Type": "String"
     },
     "ImageId" : {
-      "Type" : "String"
+      "Type" : "AWS::EC2::Image::Id"
     },
     "InstanceType" : {
       "Type" : "String"
     },
     "KeyName" : {
-      "Type" : "String"
+      "Type" : "AWS::EC2::KeyPair::KeyName"
     },
-    "SubnetId" : {
-      "Type" : "String"
+    "ReqCert" : {
+      "Type" : "String",
+      "AllowedValues" : [ "Yes", "No" ]
+    },
+    "PrivateSubnetAId" : {
+      "Type" : "AWS::EC2::Subnet::Id"
+    },
+    "PrivateSubnetBId" : {
+      "Type" : "AWS::EC2::Subnet::Id"
+    },
+    "PrivateSubnetCId" : {
+      "Type" : "AWS::EC2::Subnet::Id"
+    },
+    "PublicSubnetAId" : {
+      "Type" : "AWS::EC2::Subnet::Id"
+    },
+    "PublicSubnetBId" : {
+      "Type" : "AWS::EC2::Subnet::Id"
+    },
+    "PublicSubnetCId" : {
+      "Type" : "AWS::EC2::Subnet::Id"
     },
     "VpcId" : {
-      "Type" : "String"
+      "Type" : "AWS::EC2::VPC::Id"
     }
+
+  },
+
+  "Conditions" : {
+
+    "HasDomainName": { "Fn::Equals" : [ { "Ref" : "ReqCert" }, "Yes" ] }
 
   },
 
@@ -125,6 +150,12 @@
           },
           {
             "IpProtocol" : "tcp",
+            "FromPort" : "80",
+            "ToPort" : "80",
+            "CidrIp" : "0.0.0.0/0"
+          },
+          {
+            "IpProtocol" : "tcp",
             "FromPort" : "443",
             "ToPort" : "443",
             "CidrIp" : "0.0.0.0/0"
@@ -136,6 +167,7 @@
 
     "CreateCertFunction": {
       "Type": "AWS::Lambda::Function",
+      "Condition": "HasDomainName",
       "Properties": {
       "Code": {
         "ZipFile":  { "Fn::Join": ["\n", [
@@ -186,6 +218,7 @@
 
     "Cert": {
       "Type": "Custom::Cert",
+      "Condition": "HasDomainName",
       "Properties": {
         "DomainName": { "Fn::Join" : [ "", [ { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" } ] ] },
         "ServiceToken": { "Fn::GetAtt" : [ "CreateCertFunction", "Arn" ] }
@@ -205,11 +238,16 @@
         },
         "Listeners" : [ 
           { "LoadBalancerPort" : "22", "InstancePort" : "22", "Protocol" : "TCP" },
-          { "LoadBalancerPort" : "443", "InstancePort" : "8080", "Protocol" : "HTTPS", "SSLCertificateId" : { "Ref" : "Cert" } }
+          { 
+            "LoadBalancerPort" : { "Fn::If" : [ "HasDomainName", "443", "80" ] }, 
+            "InstancePort" : "8080", 
+            "Protocol" : { "Fn::If" : [ "HasDomainName", "HTTPS", "HTTP" ] },
+            "SSLCertificateId" : { "Fn::If" : [ "HasDomainName", { "Ref": "Cert" }, { "Ref": "AWS::NoValue" } ] }
+          }
         ],
         "Scheme" : "internet-facing",
         "SecurityGroups" : [ { "Ref" : "ElbSg" }, { "Ref" : "Ec2Sg" } ],
-        "Subnets" : [ { "Ref" : "SubnetId" } ]
+        "Subnets" : [ { "Ref" : "PublicSubnetAId" }, { "Ref" : "PublicSubnetBId" }, { "Ref" : "PublicSubnetCId" } ]
       }
     },
 
@@ -265,11 +303,49 @@
         "LoadBalancerNames" : [ { "Ref" : "Elb" } ],
         "MinSize" : "1",
         "MaxSize" : "1",
-        "VPCZoneIdentifier" : [ { "Ref" : "SubnetId" } ]
+        "VPCZoneIdentifier" : [ { "Ref" : "PrivateSubnetAId" }, { "Ref" : "PrivateSubnetBId" }, { "Ref" : "PrivateSubnetCId" } ]
       },
       "CreationPolicy" : { "ResourceSignal" : { "Count" : "1" , "Timeout" : "PT60M" } }
-    }
+    },
 
+    "Efs" : {
+      "Type" : "AWS::EFS::FileSystem",
+      "Properties" : {
+        "FileSystemTags" : [
+          {
+            "Key" : "Name",
+            "Value" : "TestFileSystem"
+          }
+        ]
+      }
+    },
+
+    "MountTarget1": {
+      "Type": "AWS::EFS::MountTarget",
+      "Properties": {
+        "FileSystemId": { "Ref": "Efs" },
+        "SubnetId": { "Ref": "PrivateSubnetAId" },
+        "SecurityGroups": [ { "Ref": "Ec2Sg" } ]        
+      }
+    },
+
+    "MountTarget2": {
+      "Type": "AWS::EFS::MountTarget",
+      "Properties": {
+        "FileSystemId": { "Ref": "Efs" },
+        "SubnetId": { "Ref": "PrivateSubnetBId" },
+        "SecurityGroups": [ { "Ref": "Ec2Sg" } ]        
+      }
+    },
+
+    "MountTarget3": {
+      "Type": "AWS::EFS::MountTarget",
+      "Properties": {
+        "FileSystemId": { "Ref": "Efs" },
+        "SubnetId": { "Ref": "PrivateSubnetCId" },
+        "SecurityGroups": [ { "Ref": "Ec2Sg" } ]        
+      }
+    }
 
   },
 
@@ -281,7 +357,7 @@
     },
     "Url" : {
       "Description" : "url",
-      "Value" : { "Fn::Join" : [ "", [ "https://", { "Ref" : "ARecord" } ] ] }
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::If" : [ "HasDomainName", "https://", "http://" ] }, { "Ref" : "ARecord" } ] ] }
     }
 
   }
