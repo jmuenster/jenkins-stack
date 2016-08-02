@@ -2,7 +2,7 @@
 
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Builds a jenkins ci stack",
+  "Description" : "multi-az jenkins template",
 
   "Parameters" : {
 
@@ -48,7 +48,7 @@
 
   "Conditions" : {
 
-    "HasDomainName": { "Fn::Equals" : [ { "Ref" : "ReqCert" }, "Yes" ] }
+    "ReqCert": { "Fn::Equals" : [ { "Ref" : "ReqCert" }, "Yes" ] }
 
   },
 
@@ -100,6 +100,9 @@
               "Version" : "2012-10-17", 
               "Statement": [
                 { "Effect": "Allow", "Action": "cloudformation:*", "Resource": "*" },
+                { "Effect": "Allow", "Action": "kinesis:*", "Resource": "*" },
+                { "Effect": "Allow", "Action": "dynamodb:*", "Resource": "*" },
+                { "Effect": "Allow", "Action": "kms:*", "Resource": "*" },
                 { "Effect": "Allow", "Action": "iam:*", "Resource": "*" },
                 { "Effect": "Allow", "Action": "lambda:*", "Resource": "*" },
                 { "Effect": "Allow", "Action": "s3:*", "Resource": "*" }
@@ -167,7 +170,7 @@
 
     "CreateCertFunction": {
       "Type": "AWS::Lambda::Function",
-      "Condition": "HasDomainName",
+      "Condition": "ReqCert",
       "Properties": {
       "Code": {
         "ZipFile":  { "Fn::Join": ["\n", [
@@ -218,7 +221,7 @@
 
     "Cert": {
       "Type": "Custom::Cert",
-      "Condition": "HasDomainName",
+      "Condition": "ReqCert",
       "Properties": {
         "DomainName": { "Fn::Join" : [ "", [ { "Ref" : "AWS::StackName" }, ".", { "Ref" : "DomainName" } ] ] },
         "ServiceToken": { "Fn::GetAtt" : [ "CreateCertFunction", "Arn" ] }
@@ -239,10 +242,10 @@
         "Listeners" : [ 
           { "LoadBalancerPort" : "22", "InstancePort" : "22", "Protocol" : "TCP" },
           { 
-            "LoadBalancerPort" : { "Fn::If" : [ "HasDomainName", "443", "80" ] }, 
+            "LoadBalancerPort" : { "Fn::If" : [ "ReqCert", "443", "80" ] }, 
             "InstancePort" : "8080", 
-            "Protocol" : { "Fn::If" : [ "HasDomainName", "HTTPS", "HTTP" ] },
-            "SSLCertificateId" : { "Fn::If" : [ "HasDomainName", { "Ref": "Cert" }, { "Ref": "AWS::NoValue" } ] }
+            "Protocol" : { "Fn::If" : [ "ReqCert", "HTTPS", "HTTP" ] },
+            "SSLCertificateId" : { "Fn::If" : [ "ReqCert", { "Ref": "Cert" }, { "Ref": "AWS::NoValue" } ] }
           }
         ],
         "Scheme" : "internet-facing",
@@ -357,7 +360,7 @@
     },
     "Url" : {
       "Description" : "url",
-      "Value" : { "Fn::Join" : [ "", [ { "Fn::If" : [ "HasDomainName", "https://", "http://" ] }, { "Ref" : "ARecord" } ] ] }
+      "Value" : { "Fn::Join" : [ "", [ { "Fn::If" : [ "ReqCert", "https://", "http://" ] }, { "Ref" : "ARecord" } ] ] }
     }
 
   }
