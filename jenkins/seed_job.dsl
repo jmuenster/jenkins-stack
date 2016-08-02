@@ -1,4 +1,6 @@
-job( 'generated-pipeline-test-job' ) {
+def job_name = "${program}-${domain}-${stage}-v${version}-job"
+
+job( job_name ) {
   properties {
     buildDiscarder {
       strategy {
@@ -21,12 +23,30 @@ job( 'generated-pipeline-test-job' ) {
     preBuildCleanup()
   }
   steps {
-    shell( "/opt/jenkins-stack/bin/update_stack.sh \\\n\
-      \${WORKSPACE}/cfn/template.json \\\n\
-      ${region} \\\n\
-      \${WORKSPACE}/tmp/${package_name}-pkg.zip \\\n\
-      ${package_name}/${package_name}-pkg.zip \\\n\
-      ${s3_bucket} \\\n\
-      ${stack_name}" )
+    virtualenvBuilder {
+      pythonName('System-CPython-2.7')
+      clear( true )
+      home( '' )
+      systemSitePackages( false )
+      nature( 'shell' )
+      command( 'pip install boto3 \n\
+REGION=us-west-2 \n\
+PROGRAM=pdh \n\
+DOMAIN=lm \n\
+STAGE=dev \n\
+VERSION=1 \n\
+BUCKET=jackburton-lambda-pkgs \n\
+python /opt/jenkins-stack/bin/update_stack.py \\\n\
+  -r ${REGION} \\\n\
+  -p ${PROGRAM} \\\n\
+  -d ${DOMAIN} \\\n\
+  -s ${STAGE} \\\n\
+  -v ${VERSION} \\\n\
+  -c ${WORKSPACE} \\\n\
+  -b ${BUCKET} \\\n\
+  -n ${PROGRAM}-${DOMAIN}-${STAGE}-v${VERSION}-stack \\\n\
+  -e ${VIRTUAL_ENV}/lib/python2.7/site-packages')
+      ignoreExitCode( false )
+    }
   }
 }
