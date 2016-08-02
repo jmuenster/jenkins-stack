@@ -9,15 +9,16 @@ bail() { echo -e "errors while: ${1}\n${2}"; exit 1; }
 
 verb="fetching az, inst id and region from instance metadata" && echo "${verb}"
 
-az=$( curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone 2>&1 ) || bail "${verb}" ${az}
-inst_id=$( curl -s http://169.254.169.254/latest/meta-data/instance-id 2>&1 ) || bail "${verb}" ${inst_id}
-region=$( curl -s http://169.254.169.254/latest/dynamic/instance-identity/document |sed -n 's/\ *"region" : "\(.*\)"/\1/p' 2>&1 ) || bail "${verb}" ${region}
+az=$( curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone 2>&1 ) || bail "${verb}" "${az}"
+inst_id=$( curl -s http://169.254.169.254/latest/meta-data/instance-id 2>&1 ) || bail "${verb}" "${inst_id}"
+region=$( curl -s http://169.254.169.254/latest/dynamic/instance-identity/document |sed -n 's/\ *"region" : "\(.*\)"/\1/p' 2>&1 ) || bail "${verb}" "${region}"
 
 
 
 verb="fetching stack name from ec2 api" && echo "${verb}"
 
-stack_name=$( aws ec2 describe-tags --region ${region} --filters "Name=resource-id,Values=${inst_id}" --query 'Tags[?Key==`aws:cloudformation:stack-name`].Value' --output text 2>&1 ) || bail "${verb}" ${stack_name}
+stack_name=$( aws ec2 describe-tags --region ${region} --filters "Name=resource-id,Values=${inst_id}" --query 'Tags[?Key==`aws:cloudformation:stack-name`].Value' --output text 2>&1 ) || \
+  bail "${verb}" "${stack_name}"
 
 if [ $? -ne 0 ]; then
 
@@ -36,7 +37,7 @@ fi
 
 verb="fetching filesystem id from cloudformation api" && echo "${verb}"
 
-fs_id=$( aws cloudformation describe-stack-resource --region ${region} --stack-name ${stack_name} --logical-resource-id ${fs_log_id} --query 'StackResourceDetail.PhysicalResourceId' --output text 2>&1 ) || bail "${verb}" ${fs_id}
+fs_id=$( aws cloudformation describe-stack-resource --region ${region} --stack-name ${stack_name} --logical-resource-id ${fs_log_id} --query 'StackResourceDetail.PhysicalResourceId' --output text 2>&1 ) || bail "${verb}" "${fs_id}"
 
 if [ $? -ne 0 ]; then
 
@@ -67,19 +68,19 @@ fi
 
 verb="mounting filesystem" && echo "${verb}"
 
-output=$( mount ${mount_dir} 2>&1 ) || bail "${verb}" ${output}
+output=$( mount ${mount_dir} 2>&1 ) || bail "${verb}" "${output}"
 
 if [ -d ${mount_dir}/jenkins ]; then
 
   verb="restarting jenkins" && echo "${verb}"
 
-  output=$( service jenkins restart 2>&1 ) || bail "${verb}" ${output}
+  output=$( service jenkins restart 2>&1 ) || bail "${verb}" "${output}"
 
 else
 
   verb="stopping, moving, symlinking and restarting jenkins" && echo "${verb}"
 
-  output=$( service jenkins stop && mv /var/lib/jenkins /efs && ln -s /efs/jenkins /var/lib/jenkins && service jenkins start 2>&1 ) || bail "${verb}" ${output}
+  output=$( service jenkins stop && mv /var/lib/jenkins /efs && ln -s /efs/jenkins /var/lib/jenkins && service jenkins start 2>&1 ) || bail "${verb}" "${output}"
 
 fi
 
