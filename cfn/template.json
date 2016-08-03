@@ -299,7 +299,7 @@
               "git clone https://github.com/jmuenster/jenkins-stack.git \n",
               "cd jenkins-stack/ansible \n",
               "ansible-galaxy install geerlingguy.jenkins -p ./roles/ \n",
-              "ansible-playbook -c local config.yml --extra-vars \"admin_password=$( cat /root/.admin_pass )\" \n",
+              "ansible-playbook -v -c local config.yml --extra-vars \"admin_password=$( cat /root/.admin_pass )\" \n",
               "/opt/aws/bin/cfn-signal --stack ", { "Ref": "AWS::StackName" }, " --resource Asg --region ", { "Ref": "AWS::Region" }, " -s true \n"
             ] ]
           }
