@@ -11,8 +11,10 @@ verb="fetching az, inst id and region from instance metadata" && echo "${verb}"
 
 az=$( curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone 2>&1 ) || bail "${verb}" "${az}"
 inst_id=$( curl -s http://169.254.169.254/latest/meta-data/instance-id 2>&1 ) || bail "${verb}" "${inst_id}"
-region=$( curl -s http://169.254.169.254/latest/dynamic/instance-identity/document |sed -n 's/\ *"region" : "\(.*\)"/\1/p' 2>&1 ) || bail "${verb}" "${region}"
+#region=$( curl -s http://169.254.169.254/latest/dynamic/instance-identity/document |sed -n 's/\ *"region" : "\(.*\)"/\1/p' 2>&1 ) || bail "${verb}" "${region}"
+region=$( echo "${az:0:-1}" 2>&1 ) || bail "${verb}" "${region}"
 
+echo "az: ${az}, inst_id: ${inst_id}, region: ${region}"
 
 
 verb="fetching stack name from ec2 api" && echo "${verb}"
@@ -68,7 +70,16 @@ fi
 
 verb="mounting filesystem" && echo "${verb}"
 
-output=$( mount ${mount_dir} 2>&1 ) || bail "${verb}" "${output}"
+#output=$( mount ${mount_dir} 2>&1 ) || bail "${verb}" "${output}"
+
+if [ $( mount | grep -c ${mount_dir} ) -eq 0 ]; then
+
+  verb="mounting filesystem" && echo "${verb}"
+
+  output=$( mount ${mount_dir} 2>&1 ) || bail "${verb}" "${output}"
+
+fi
+
 
 
 
@@ -84,7 +95,7 @@ else
 
   verb="creating and symlinking jenkins directory" && echo "${verb}"
 
-  output=$( mkdir /var/lib/jenkins && ln -s /efs/jenkins /var/lib/jenkins 2>&1 ) || bail "${verb}" "${output}"
+  output=$( mkdir ${mount_dir}/jenkins && ln -s ${mount_dir}/jenkins /var/lib/jenkins 2>&1 ) || bail "${verb}" "${output}"
 
 fi
 

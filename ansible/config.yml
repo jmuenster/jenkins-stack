@@ -5,13 +5,9 @@
     jenkins_plugins: [ job-dsl git ws-cleanup envinject shiningpanda ]
     jenkins_admin_username: admin
     jenkins_admin_password: '{{ admin_password }}'
-  tasks:
-    - name: Check jenkins install status
-      stat: path=/efs/jenkins
-      register: jenkins
   roles:
     - aws-cfn-bootstrap
     - awscli
     - manage_efs
-    - { role: geerlingguy.jenkins, when: jenkins.stat.isdir is defined and jenkins.stat.isdir }
+    - geerlingguy.jenkins
 
