@@ -21,6 +21,18 @@
     "ReqCert": {
       "Type": "String",
       "AllowedValues": [ "Yes", "No" ]
+    },
+    "VpcFirstOctet": {
+      "Type": "String"
+      "Default": "10"
+    },
+    "VpcSecondOctet": {
+      "Type": "String"
+      "Default": "10"
+    },
+    "VpcThirdOctet": {
+      "Type": "String"
+      "Default": "10"
     }
 
   },
@@ -37,8 +49,9 @@
       "Type": "AWS::CloudFormation::Stack",
        "Properties": {
          "Parameters": {
-           "ClassA": "10",
-           "ClassB": "12"
+           "FirstOctet": { "Ref": "VpcFirstOctet" },
+           "SecondOctet": { "Ref": "VpcSecondOctet" },
+           "ThirdOctet": { "Ref": "VpcThirdOctet" },
          },
          "TemplateURL": "https://s3-us-west-2.amazonaws.com/jmuenster-public-templates/vpc-stack/template.json",
          "TimeoutInMinutes": "60"

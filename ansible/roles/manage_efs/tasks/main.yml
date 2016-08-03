@@ -1,0 +1,3 @@
+---
+  - script: /opt/jenkins-stack/bin/manage_efs.sh
+

@@ -8,4 +8,5 @@
   roles:
     - aws-cfn-bootstrap
     - awscli
+    - manage_efs
     - geerlingguy.jenkins
