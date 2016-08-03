@@ -70,17 +70,21 @@ verb="mounting filesystem" && echo "${verb}"
 
 output=$( mount ${mount_dir} 2>&1 ) || bail "${verb}" "${output}"
 
+
+
 if [ -d ${mount_dir}/jenkins ]; then
 
-  verb="restarting jenkins" && echo "${verb}"
+  verb="symlinking jenkins directory" && echo "${verb}"
+
+  output=$( ln -s /efs/jenkins /var/lib/jenkins 2>&1 ) || bail "${verb}" "${output}"
 
   output=$( service jenkins restart 2>&1 ) || bail "${verb}" "${output}"
 
 else
 
-  verb="stopping, moving, symlinking and restarting jenkins" && echo "${verb}"
+  verb="creating and symlinking jenkins directory" && echo "${verb}"
 
-  output=$( service jenkins stop && mv /var/lib/jenkins /efs && ln -s /efs/jenkins /var/lib/jenkins && service jenkins start 2>&1 ) || bail "${verb}" "${output}"
+  output=$( mkdir /var/lib/jenkins && ln -s /efs/jenkins /var/lib/jenkins 2>&1 ) || bail "${verb}" "${output}"
 
 fi
 
