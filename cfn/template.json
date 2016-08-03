@@ -23,15 +23,15 @@
       "AllowedValues": [ "Yes", "No" ]
     },
     "VpcFirstOctet": {
-      "Type": "String"
+      "Type": "String",
       "Default": "10"
     },
     "VpcSecondOctet": {
-      "Type": "String"
+      "Type": "String",
       "Default": "10"
     },
     "VpcThirdOctet": {
-      "Type": "String"
+      "Type": "String",
       "Default": "10"
     }
 
@@ -51,7 +51,7 @@
          "Parameters": {
            "FirstOctet": { "Ref": "VpcFirstOctet" },
            "SecondOctet": { "Ref": "VpcSecondOctet" },
-           "ThirdOctet": { "Ref": "VpcThirdOctet" },
+           "ThirdOctet": { "Ref": "VpcThirdOctet" }
          },
          "TemplateURL": "https://s3-us-west-2.amazonaws.com/jmuenster-public-templates/vpc-stack/template.json",
          "TimeoutInMinutes": "60"
@@ -297,7 +297,6 @@
               "[ -f /root/.admin_pass ] || touch /root/.admin_pass && chmod 400 /root/.admin_pass && pwgen 12 1 > /root/.admin_pass \n",
               "cd /opt \n",
               "git clone https://github.com/jmuenster/jenkins-stack.git \n",
-              "/opt/jenkins-stack/bin/manage_efs.sh \n",
               "cd jenkins-stack/ansible \n",
               "ansible-galaxy install geerlingguy.jenkins -p ./roles/ \n",
               "ansible-playbook -c local config.yml --extra-vars \"admin_password=$( cat /root/.admin_pass )\" \n",
