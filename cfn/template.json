@@ -297,7 +297,7 @@
               "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys \n",
               "cd /opt && git clone https://github.com/jmuenster/jenkins-stack.git \n",
               "echo \"$( curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone ).", { "Ref": "Efs" }, ".efs.", { "Ref": "AWS::Region" }, 
-                ".amazonaws.com:/ /efs nfs4 nfsvers=4.1 0 0" >> /etc/fstab \n",
+                ".amazonaws.com:/ /efs nfs4 nfsvers=4.1 0 0\" >> /etc/fstab \n",
               "mount /efs \n",
               "[ -f /efs/.admin_pass ] || touch /efs/.admin_pass && chmod 400 /efs/.admin_pass && pwgen 12 1 > /efs/.admin_pass \n",
               "#cd jenkins-stack/ansible \n",
