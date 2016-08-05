@@ -5,16 +5,9 @@
     jenkins_plugins: [ job-dsl git ws-cleanup envinject shiningpanda ]
     jenkins_admin_username: admin
     jenkins_admin_password: '{{ admin_password }}'
-<<<<<<< HEAD
     jenkins_home: /efs/jenkins
   roles:
     - aws-cfn-bootstrap
     - awscli
-=======
-  roles:
-    - aws-cfn-bootstrap
-    - awscli
-    - manage_efs
->>>>>>> b0e65ff1fb272d12c89e8333b68cf3c65082511f
     - geerlingguy.jenkins
 

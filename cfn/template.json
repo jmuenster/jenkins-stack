@@ -290,7 +290,7 @@
           "Fn::Base64": {
             "Fn::Join": [ "", [
               "#!/bin/bash -xe \n",
-              "yum-config-manager --enable epel \n",
+              "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \n",
               "yum install -y ansible git pwgen zip nfs-utils \n",
               "yum -y update \n",
               "[ -f /root/.ssh/id_rsa ] || ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa \n",
@@ -298,12 +298,11 @@
               "cd /opt && git clone https://github.com/jmuenster/jenkins-stack.git \n",
               "echo \"$( curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone ).", { "Ref": "Efs" }, ".efs.", { "Ref": "AWS::Region" }, 
                 ".amazonaws.com:/ /efs nfs4 nfsvers=4.1 0 0\" >> /etc/fstab \n",
-              "mount /efs \n",
+              "mkdir /efs && mount /efs \n",
               "[ -f /efs/.admin_pass ] || touch /efs/.admin_pass && chmod 400 /efs/.admin_pass && pwgen 12 1 > /efs/.admin_pass \n",
-              "#cd jenkins-stack/ansible \n",
-              "#ansible-galaxy install geerlingguy.jenkins -p ./roles/ \n",
-              "#ansible-playbook -v -c local config.yml --extra-vars \"admin_password=$( cat /root/.admin_pass )\" \n",
-              "#/opt/aws/bin/cfn-signal --stack ", { "Ref": "AWS::StackName" }, " --resource Asg --region ", { "Ref": "AWS::Region" }, " -s true \n"
+              "ansible-galaxy install geerlingguy.jenkins -p /opt/jenkins-stack/ansible/roles/ \n",
+              "ansible-playbook -v -c local /opt/jenkins-stack/ansible/config.yml --extra-vars \"admin_password=$( cat /efs/.admin_pass )\" \n",
+              "/opt/aws/bin/cfn-signal --stack ", { "Ref": "AWS::StackName" }, " --resource Asg --region ", { "Ref": "AWS::Region" }, " -s true \n"
             ] ]
           }
         }
