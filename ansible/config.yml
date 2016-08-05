@@ -6,6 +6,8 @@
     jenkins_plugins: [ job-dsl git ws-cleanup envinject shiningpanda ]
     jenkins_admin_username: admin
     jenkins_admin_password: '{{ admin_password }}'
+    jenkins_repo_url: http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo
+    jenkins_repo_key_url: http://pkg.jenkins-ci.org/redhat-stable/jenkins-ci.org.key
   roles:
     - aws-cfn-bootstrap
     - awscli

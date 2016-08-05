@@ -299,11 +299,11 @@
               "echo \"$( curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone ).", { "Ref": "Efs" }, ".efs.", { "Ref": "AWS::Region" }, 
                 ".amazonaws.com:/ /efs nfs4 nfsvers=4.1 0 0\" >> /etc/fstab \n",
               "mkdir /efs && mount /efs \n",
-              "[ -f /efs/.admin_pass ] || touch /efs/.admin_pass && chmod 400 /efs/.admin_pass && pwgen 12 1 > /efs/.admin_pass \n",
-              "# ansible-galaxy install geerlingguy.jenkins -p /opt/jenkins-stack/ansible/roles/ \n",
+              "[ -f /efs/.admin_pass ] || ( touch /efs/.admin_pass && chmod 400 /efs/.admin_pass && pwgen 12 1 > /efs/.admin_pass ) \n",
+              "ansible-galaxy install geerlingguy.jenkins -p /opt/jenkins-stack/ansible/roles/ \n",
               "# manually cloning repos into roles dir to test jenkins_home commit \n",
-              "git clone https://github.com/geerlingguy/ansible-role-jenkins.git /opt/jenkins-stack/ansible/roles/geerlingguy.jenkins \n",
-              "git clone https://github.com/geerlingguy/ansible-role-java.git /opt/jenkins-stack/ansible/roles/geerlingguy.java \n",
+              "#git clone https://github.com/jmuenster/ansible-role-jenkins.git /opt/jenkins-stack/ansible/roles/geerlingguy.jenkins \n",
+              "#git clone https://github.com/geerlingguy/ansible-role-java.git /opt/jenkins-stack/ansible/roles/geerlingguy.java \n",
               "ansible-playbook -v -c local /opt/jenkins-stack/ansible/config.yml --extra-vars \"admin_password=$( cat /efs/.admin_pass )\" \n",
               "/opt/aws/bin/cfn-signal --stack ", { "Ref": "AWS::StackName" }, " --resource Asg --region ", { "Ref": "AWS::Region" }, " -s true \n"
             ] ]
