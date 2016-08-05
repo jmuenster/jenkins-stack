@@ -323,6 +323,7 @@
           { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetCId" ] }
         ]
       },
+      "CreationPolicy": { "ResourceSignal": { "Count": "1" , "Timeout": "PT60M" } },
       "DependsOn": [ "MountTarget1", "MountTarget2", "MountTarget3" ]
     },
 
