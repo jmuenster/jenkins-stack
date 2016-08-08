@@ -7,34 +7,46 @@
   "Parameters": {
 
     "DomainName": {
+      "Description": "Must be a valid hosted zone",
       "Type": "String"
     },
-    "ImageId": {
-      "Type": "AWS::EC2::Image::Id"
-    },
     "InstanceType": {
+      "Default": "t2.micro",
       "Type": "String"
     },
     "KeyName": {
       "Type": "AWS::EC2::KeyPair::KeyName"
     },
     "ReqCert": {
-      "Type": "String",
-      "AllowedValues": [ "Yes", "No" ]
+      "AllowedValues": [ "Yes", "No" ],
+      "Default": "No",
+      "Description": "Select yes to create an ACM certificate (you must have access to an email address registered with the domain)",
+      "Type": "String"
     },
     "VpcFirstOctet": {
-      "Type": "String",
-      "Default": "10"
+      "Default": "10",
+      "Description": "The first octet of the vpc cidr block (i.e. x.0.0.0)",
+      "Type": "String"
     },
     "VpcSecondOctet": {
-      "Type": "String",
-      "Default": "10"
+      "Default": "10",
+      "Description": "The second octet of the vpc cidr block (i.e. 0.x.0.0)",
+      "Type": "String"
     },
     "VpcThirdOctet": {
-      "Type": "String",
-      "Default": "10"
+      "Default": "10",
+      "Description": "The third octet of the vpc cidr block (i.e. 0.0.x.0)",
+      "Type": "String"
     }
 
+  },
+
+  "Mappings": {
+    "ImageIdMap": {
+      "us-west-1": { "ImageId": "ami-d1315fb1" },
+      "us-west-2": { "ImageId": "ami-775e4f16" },
+      "us-east-1": { "ImageId": "ami-2051294a" }
+    }
   },
 
   "Conditions": {
@@ -282,7 +294,7 @@
       "Properties": {
         "BlockDeviceMappings": [ { "DeviceName": "/dev/sda1", "Ebs": { "VolumeSize": "40" } } ],
         "IamInstanceProfile": { "Ref": "IamInstanceProfile" },
-        "ImageId": { "Ref": "ImageId" },
+        "ImageId": { "Fn::FindInMap": [ "ImageIdMap", { "Ref": "AWS::Region" }, "ImageId" ] },
         "InstanceType": { "Ref": "InstanceType" },
         "KeyName": { "Ref": "KeyName" },
         "SecurityGroups": [ { "Ref": "Ec2Sg" } ],
@@ -292,19 +304,20 @@
               "#!/bin/bash -xe \n",
               "yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \n",
               "yum install -y ansible git pwgen zip nfs-utils \n",
-              "#yum -y update \n",
+              "yum -y update \n",
               "[ -f /root/.ssh/id_rsa ] || ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa \n",
               "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys \n",
               "cd /opt && git clone https://github.com/jmuenster/jenkins-stack.git \n",
               "echo \"$( curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone ).", { "Ref": "Efs" }, ".efs.", { "Ref": "AWS::Region" }, 
-                ".amazonaws.com:/ /efs nfs4 nfsvers=4.1 0 0\" >> /etc/fstab \n",
-              "mkdir /efs && mount /efs \n",
-              "[ -f /efs/.admin_pass ] || ( touch /efs/.admin_pass && chmod 400 /efs/.admin_pass && pwgen 12 1 > /efs/.admin_pass ) \n",
+                ".amazonaws.com:/ /var/lib/jenkins nfs4 nfsvers=4.1 0 0\" >> /etc/fstab \n",
+              "mkdir /var/lib/jenkins && mount /var/lib/jenkins \n",
+              "[ -f /var/lib/jenkins/.admin_pass ] || ( touch /var/lib/jenkins/.admin_pass && chmod 400 /var/lib/jenkins/.admin_pass && pwgen 12 1 > /var/lib/jenkins/.admin_pass ) \n",
+              "#[ -d /efs/jenkins ] && ln -s /efs/jenkins /var/lib/jenkins || ( mkdir /efs/jenkins && ln -s /efs/jenkins /var/lib/jenkins ) \n",
               "ansible-galaxy install geerlingguy.jenkins -p /opt/jenkins-stack/ansible/roles/ \n",
               "# manually cloning repos into roles dir to test jenkins_home commit \n",
               "#git clone https://github.com/jmuenster/ansible-role-jenkins.git /opt/jenkins-stack/ansible/roles/geerlingguy.jenkins \n",
               "#git clone https://github.com/geerlingguy/ansible-role-java.git /opt/jenkins-stack/ansible/roles/geerlingguy.java \n",
-              "ansible-playbook -v -c local /opt/jenkins-stack/ansible/config.yml --extra-vars \"admin_password=$( cat /efs/.admin_pass )\" \n",
+              "ansible-playbook -v -c local /opt/jenkins-stack/ansible/config.yml --extra-vars \"admin_password=$( cat /var/lib/jenkins/.admin_pass )\" \n",
               "/opt/aws/bin/cfn-signal --stack ", { "Ref": "AWS::StackName" }, " --resource Asg --region ", { "Ref": "AWS::Region" }, " -s true \n"
             ] ]
           }
@@ -326,7 +339,7 @@
           { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetCId" ] }
         ]
       },
-      "CreationPolicy": { "ResourceSignal": { "Count": "1" , "Timeout": "PT60M" } },
+      "CreationPolicy": { "ResourceSignal": { "Count": "1" , "Timeout": "PT20M" } },
       "DependsOn": [ "MountTarget1", "MountTarget2", "MountTarget3" ]
     },
 

@@ -30,12 +30,12 @@ job( job_name ) {
       systemSitePackages( false )
       nature( 'shell' )
       command( 'pip install boto3 \n\
-REGION=us-west-2 \n\
-PROGRAM=pdh \n\
-DOMAIN=lm \n\
-STAGE=dev \n\
-VERSION=1 \n\
-BUCKET=jackburton-lambda-pkgs \n\
+REGION=${region} \n\
+PROGRAM=${program} \n\
+DOMAIN=${domain} \n\
+STAGE=${stage} \n\
+VERSION=${version} \n\
+BUCKET=${bucket} \n\
 python /opt/jenkins-stack/bin/update_stack.py \\\n\
   -r ${REGION} \\\n\
   -p ${PROGRAM} \\\n\

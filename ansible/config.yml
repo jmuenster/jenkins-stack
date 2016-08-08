@@ -2,7 +2,6 @@
 - name: Configure jenkins ci
   hosts: localhost
   vars:
-    jenkins_home: /efs/jenkins
     jenkins_plugins: [ job-dsl git ws-cleanup envinject shiningpanda ]
     jenkins_admin_username: admin
     jenkins_admin_password: '{{ admin_password }}'
