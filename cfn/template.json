@@ -265,7 +265,7 @@
             "SSLCertificateId": { "Fn::If": [ "ReqCert", { "Ref": "Cert" }, { "Ref": "AWS::NoValue" } ] }
           }
         ],
-        "Scheme": "internet-facing",
+        "Scheme": "internal",
         "SecurityGroups": [ { "Ref": "ElbSg" }, { "Ref": "Ec2Sg" } ],
         "Subnets": [ 
           { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PublicSubnetAId" ] }, 
