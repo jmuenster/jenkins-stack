@@ -6,8 +6,18 @@
 
   "Parameters": {
 
+    "CidrBlockPrefix": {
+      "Description": "First three octets in the vpc cidr block range (x.y.z.0)",
+      "Type": "String",
+      "Default": "10.10.10"
+    },
     "DomainName": {
       "Description": "Must be a valid hosted zone",
+      "Type": "String"
+    },
+    "ElbSgCidrRange": {
+      "Default": "0.0.0.0/0",
+      "Description": "Cidr block range used for ingress rules on the ELB security group",
       "Type": "String"
     },
     "InstanceType": {
@@ -22,21 +32,6 @@
       "Default": "No",
       "Description": "Select yes to create an ACM certificate (you must have access to an email address registered with the domain)",
       "Type": "String"
-    },
-    "Octet1": {
-      "Description": "First octet in the cidr block range (x.0.0.0)",
-      "Type": "String",
-      "Default": "10"
-    },
-    "Octet2": {
-      "Description": "Second octet in the cidr block range (0.x.0.0)",
-      "Type": "String",
-      "Default": "10"
-    },
-    "Octet3": {
-      "Description": "Third octet in the cidr block range (0.0.x.0)",
-      "Type": "String",
-      "Default": "10"
     },
     "ZoneId1": {
       "Description": "Identifier for the first availability zone ('a' usually works)",
@@ -76,9 +71,7 @@
       "Type": "AWS::CloudFormation::Stack",
        "Properties": {
          "Parameters": {
-           "Octet1": { "Ref": "Octet1" },
-           "Octet2": { "Ref": "Octet2" },
-           "Octet3": { "Ref": "Octet3" },
+           "CidrBlockPrefix": { "Ref": "CidrBlockPrefix" },
            "ZoneId1": { "Ref": "ZoneId1" },
            "ZoneId2": { "Ref": "ZoneId2" },
            "ZoneId3": { "Ref": "ZoneId3" }
@@ -184,19 +177,19 @@
             "IpProtocol": "tcp",
             "FromPort": "22",
             "ToPort": "22",
-            "CidrIp": "0.0.0.0/0"
+            "CidrIp": { "Ref": "ElbSgCidrRange" }
           },
           {
             "IpProtocol": "tcp",
             "FromPort": "80",
             "ToPort": "80",
-            "CidrIp": "0.0.0.0/0"
+            "CidrIp": { "Ref": "ElbSgCidrRange" }
           },
           {
             "IpProtocol": "tcp",
             "FromPort": "443",
             "ToPort": "443",
-            "CidrIp": "0.0.0.0/0"
+            "CidrIp": { "Ref": "ElbSgCidrRange" }
           }
         ],
         "VpcId": { "Fn::GetAtt" : [ "NetworkStack", "Outputs.VpcId" ] }
