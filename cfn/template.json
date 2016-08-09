@@ -23,20 +23,35 @@
       "Description": "Select yes to create an ACM certificate (you must have access to an email address registered with the domain)",
       "Type": "String"
     },
-    "VpcFirstOctet": {
-      "Default": "10",
-      "Description": "The first octet of the vpc cidr block (i.e. x.0.0.0)",
-      "Type": "String"
+    "Octet1": {
+      "Description": "First octet in the cidr block range (x.0.0.0)",
+      "Type": "String",
+      "Default": "10"
     },
-    "VpcSecondOctet": {
-      "Default": "10",
-      "Description": "The second octet of the vpc cidr block (i.e. 0.x.0.0)",
-      "Type": "String"
+    "Octet2": {
+      "Description": "Second octet in the cidr block range (0.x.0.0)",
+      "Type": "String",
+      "Default": "10"
     },
-    "VpcThirdOctet": {
-      "Default": "10",
-      "Description": "The third octet of the vpc cidr block (i.e. 0.0.x.0)",
-      "Type": "String"
+    "Octet3": {
+      "Description": "Third octet in the cidr block range (0.0.x.0)",
+      "Type": "String",
+      "Default": "10"
+    },
+    "ZoneId1": {
+      "Description": "Identifier for the first availability zone ('a' usually works)",
+      "Type": "String",
+      "Default": "a"
+    },
+    "ZoneId2": {
+      "Description": "Identifier for the second availability zone ('b' usually works)",
+      "Type": "String",
+      "Default": "b"
+    },
+    "ZoneId3": {
+      "Description": "Identifier for the third availability zone ('c' usually works)",
+      "Type": "String",
+      "Default": "c"
     }
 
   },
@@ -61,9 +76,12 @@
       "Type": "AWS::CloudFormation::Stack",
        "Properties": {
          "Parameters": {
-           "FirstOctet": { "Ref": "VpcFirstOctet" },
-           "SecondOctet": { "Ref": "VpcSecondOctet" },
-           "ThirdOctet": { "Ref": "VpcThirdOctet" }
+           "Octet1": { "Ref": "Octet1" },
+           "Octet2": { "Ref": "Octet2" },
+           "Octet3": { "Ref": "Octet3" },
+           "ZoneId1": { "Ref": "ZoneId1" },
+           "ZoneId2": { "Ref": "ZoneId2" },
+           "ZoneId3": { "Ref": "ZoneId3" }
          },
          "TemplateURL": "https://s3-us-west-2.amazonaws.com/jmuenster-public-templates/vpc-stack/template.json",
          "TimeoutInMinutes": "60"
@@ -265,12 +283,12 @@
             "SSLCertificateId": { "Fn::If": [ "ReqCert", { "Ref": "Cert" }, { "Ref": "AWS::NoValue" } ] }
           }
         ],
-        "Scheme": "internal",
+        "Scheme": "internet-facing",
         "SecurityGroups": [ { "Ref": "ElbSg" }, { "Ref": "Ec2Sg" } ],
         "Subnets": [ 
-          { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetAId" ] }, 
-          { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetBId" ] }, 
-          { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetCId" ] }
+          { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PublicSubnet1Id" ] }, 
+          { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PublicSubnet2Id" ] }, 
+          { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PublicSubnet3Id" ] }
         ]
       }
     },
@@ -334,9 +352,9 @@
         "MinSize": "1",
         "MaxSize": "1",
         "VPCZoneIdentifier": [
-          { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetAId" ] },
-          { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetBId" ] },
-          { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetCId" ] }
+          { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnet1Id" ] },
+          { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnet2Id" ] },
+          { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnet3Id" ] }
         ]
       },
       "CreationPolicy": { "ResourceSignal": { "Count": "1" , "Timeout": "PT20M" } },
@@ -359,7 +377,7 @@
       "Type": "AWS::EFS::MountTarget",
       "Properties": {
         "FileSystemId": { "Ref": "Efs" },
-        "SubnetId": { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetAId" ] },
+        "SubnetId": { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnet1Id" ] },
         "SecurityGroups": [ { "Ref": "Ec2Sg" } ]        
       }
     },
@@ -368,7 +386,7 @@
       "Type": "AWS::EFS::MountTarget",
       "Properties": {
         "FileSystemId": { "Ref": "Efs" },
-        "SubnetId": { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetBId" ] },
+        "SubnetId": { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnet2Id" ] },
         "SecurityGroups": [ { "Ref": "Ec2Sg" } ]        
       }
     },
@@ -377,7 +395,7 @@
       "Type": "AWS::EFS::MountTarget",
       "Properties": {
         "FileSystemId": { "Ref": "Efs" },
-        "SubnetId": { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnetCId" ] },
+        "SubnetId": { "Fn::GetAtt" : [ "NetworkStack", "Outputs.PrivateSubnet3Id" ] },
         "SecurityGroups": [ { "Ref": "Ec2Sg" } ]        
       }
     }
