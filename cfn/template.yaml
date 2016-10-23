@@ -478,12 +478,6 @@ Resources:
       Parameters:
         CidrBlockPrefix:
           Ref: CidrBlockPrefix
-        ZoneId1:
-          Ref: ZoneId1
-        ZoneId2:
-          Ref: ZoneId2
-        ZoneId3:
-          Ref: ZoneId3
       TemplateURL: https://s3-us-west-2.amazonaws.com/jmuenster-public-templates/vpc-stack/template.json
       TimeoutInMinutes: '60'
     Type: AWS::CloudFormation::Stack
