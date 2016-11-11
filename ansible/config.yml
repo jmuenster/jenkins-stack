@@ -2,7 +2,7 @@
 - name: Configure jenkins ci
   hosts: localhost
   vars:
-    jenkins_plugins: [ job-dsl git ws-cleanup envinject shiningpanda ]
+    jenkins_plugins: [ job-dsl git ws-cleanup envinject shiningpanda ansicolor ]
     jenkins_admin_username: admin
     jenkins_admin_password: '{{ admin_password }}'
     jenkins_repo_url: http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo
@@ -11,4 +11,3 @@
     - aws-cfn-bootstrap
     - awscli
     - geerlingguy.jenkins
-
